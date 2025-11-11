@@ -58,7 +58,7 @@ export async function authenticateWithPasskey(mediation, password) {
         const allowCredentials = [];
 
         const options = {
-            mediation: mediation ? 'immediate' : undefined,
+            uiMode: mediation ? 'immediate' : undefined,
             password: password,
             publicKey: {
                 challenge: challenge,
@@ -102,7 +102,7 @@ export async function performCDAAuthentication() {
         const allowCredentials = [];
 
         const options = {
-            mediation: undefined, // Disable immediate mediation
+            uiMode: undefined, // Disable immediate mediation
             publicKey: {
                 challenge: challenge,
                 allowCredentials: allowCredentials,
