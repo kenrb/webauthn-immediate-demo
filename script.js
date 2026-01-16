@@ -124,6 +124,15 @@ function storeInfoAndRedirect(url, username, method) {
     window.location.href = url;
 }
 
+/**
+ * Detects the Chrome version from the User Agent string.
+ * @returns {number | false} - The Chrome version number, or false if not Chrome.
+ */
+function getChromeVersion() {
+    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+    return raw ? parseInt(raw[2], 10) : false;
+}
+
 
 // --- Core Sign-In Logic ---
 
@@ -169,13 +178,17 @@ async function attemptSignIn(useImmediateMediation = false) {
             getOptions.publicKey = publicKeyCredentialRequestOptions;
         }
 
-        // Determine mediation: force 'immediate' if specified, otherwise use toggle state
-        if (useImmediateMediation) {
-            getOptions.mediation = 'immediate';
-            console.log("[script.js] Forcing mediation: 'immediate' for this call.");
-        } else if (immediateToggle.checked) {
-            getOptions.mediation = 'immediate';
-            console.log("[script.js] Using mediation: 'immediate' from toggle.");
+        // Determine mediation/uiMode: force 'immediate' if specified, otherwise use toggle state
+        const useImmediate = useImmediateMediation || immediateToggle.checked;
+        if (useImmediate) {
+            const chromeVer = getChromeVersion();
+            if (chromeVer !== false && chromeVer >= 145) {
+                getOptions.uiMode = 'immediate';
+                console.log(`[script.js] Chrome ${chromeVer} detected. Using uiMode: 'immediate'.`);
+            } else {
+                getOptions.mediation = 'immediate';
+                console.log(`[script.js] ${chromeVer ? 'Chrome ' + chromeVer : 'Non-Chrome'} detected. Using mediation: 'immediate'.`);
+            }
         } else {
              console.log("[script.js] Using default mediation (optional).");
         }
@@ -319,6 +332,31 @@ function initializeDemo() {
         if(capabilityStatusDiv) capabilityStatusDiv.innerHTML = `<div class="message message-error">Initialization Error: Page elements missing.</div>`;
         if(signInButton) signInButton.disabled = true;
         return;
+    }
+
+    // ** NEW: Check Chrome Version for Origin Trial Message **
+    const originTrialMessage = document.getElementById('originTrialMessage');
+    const originTrialTitle = document.getElementById('originTrialTitle');
+    const originTrialBody = document.getElementById('originTrialBody');
+
+    if (originTrialMessage && originTrialTitle && originTrialBody) {
+        const chromeVer = getChromeVersion();
+        console.log(`[script.js] Detected Chrome Version: ${chromeVer}`);
+
+        if (chromeVer === false) {
+             // Not Chrome -> Hide the message
+             originTrialMessage.style.display = 'none';
+        } else if (chromeVer === false || chromeVer <= 144) {
+             // Chrome <= 144 -> Show "Now in Origin Trial" (Default HTML is correct, just ensure visible)
+             originTrialMessage.style.display = 'block';
+        } else {
+             // Chrome >= 145 -> Show "Origin Trial has ended"
+             originTrialMessage.style.display = 'block';
+             originTrialMessage.classList.remove('bg-green-100', 'border-green-500', 'text-green-700');
+             originTrialMessage.classList.add('bg-yellow-100', 'border-yellow-500', 'text-yellow-700'); // Change style to warning
+             originTrialTitle.textContent = "Origin Trial has ended";
+             originTrialBody.innerHTML = "The Origin Trial for this feature has concluded in Chrome 145+. Please check for standard availability or newer trials.";
+        }
     }
 
 
