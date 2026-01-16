@@ -79,7 +79,7 @@
 
         <div class="text-center mb-4">
             <a href="https://github.com/w3c/webauthn/wiki/Explainer:-WebAuthn-immediate-mediation" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">
-                Explainer: WebAuthn immediate mediation
+                Explainer: WebAuthn immediate get
             </a>
         </div>
 
@@ -88,7 +88,7 @@
             <h2 class="font-semibold mb-2">How to Test:</h2>
             <ul class="list-disc list-inside space-y-1">
                 <li>Try this in a recent version of <strong class="font-semibold">Google Chrome</strong>.</li>
-                <li>This site is registered for the Origin Trial, so the feature should be enabled.</li>
+                <li id="originTrialInstruction">This site is registered for the Origin Trial, so the feature should be enabled.</li>
                 <li>Alternatively, you can enable the flag manually: <code class="bg-blue-100 px-1 rounded">chrome://flags/#web-authentication-immediate-get</code></li>
             </ul>
         </div>
@@ -106,7 +106,7 @@
 
         <div class="space-y-4 mb-6">
             <div class="flex items-center justify-between">
-                <span class="text-gray-700">Use <code class="bg-gray-200 px-1 rounded text-sm">mediation: 'immediate'</code></span>
+                <span class="text-gray-700">Use <code id="immediateModeLabel" class="bg-gray-200 px-1 rounded text-sm">mediation/uiMode: 'immediate'</code></span>
                 <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
                     <input type="checkbox" name="immediateToggle" id="immediateToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
                     <label for="immediateToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
@@ -167,11 +167,11 @@
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?uv=required</code>
                     </li>
                     <li>
-                        <code class="bg-gray-200 px-1 rounded">immediate_onload=true</code>: Attempts a sign-in with <code class="bg-gray-200 px-1 rounded">mediation: 'immediate'</code> automatically when the page loads.
+                        <code class="bg-gray-200 px-1 rounded">immediate_onload=true</code>: Attempts a sign-in with <code class="bg-gray-200 px-1 rounded">mediation/uiMode: 'immediate'</code> automatically when the page loads.
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?immediate_onload=true</code>
                     </li>
                     <li>
-                        <code class="bg-gray-200 px-1 rounded">fallback=pw</code>: If a sign-in attempt on this page results in a <code class="bg-gray-200 px-1 rounded">NotAllowedError</code> (e.g., user cancellation, or immediate mediation fails), you will be redirected to the sign-in page with the password flow pre-selected (<code class="bg-gray-200 px-1 rounded">signin.html?type=pw</code>).
+                        <code class="bg-gray-200 px-1 rounded">fallback=pw</code>: If a sign-in attempt on this page results in a <code class="bg-gray-200 px-1 rounded">NotAllowedError</code> (e.g., user cancellation, or immediate request fails), you will be redirected to the sign-in page with the password flow pre-selected (<code class="bg-gray-200 px-1 rounded">signin.html?type=pw</code>).
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?fallback=pw</code>
                     </li>
                      <li>
