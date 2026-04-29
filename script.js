@@ -234,15 +234,16 @@ async function attemptSignIn(useImmediateGet = false) {
         getOptions.signal = abortSignal;
 
         // Just for testing. Needs to be removed.
-        setTimeout(abortController.abort(), 5000);
+        setTimeout(() => { abortController.abort() }, 5000);
 
         try {
             const credential = await navigator.credentials.get(getOptions);
         } catch (error) {
             if (error.name == "AbortError") {
                console.log("request aborted");
+            } else {
+                console.log("request error");
             }
-            console.log("request error");
             return;
         }
 
