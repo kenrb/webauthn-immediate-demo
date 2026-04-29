@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- ** Origin Trial Token ** -->
-    <meta http-equiv="origin-trial" content="AgW6118UKKUnG1lyqZnTHmRNobr+fgDUGycQyH7kSau2pZBcBTvJcLLtJHNhCcqbRKjIjvbtaVjqCCegN8BoJggAAABpeyJvcmlnaW4iOiJodHRwczovL2RlZXBoYW5kLmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiV2ViQXV0aGVudGljYXRpb25JbW1lZGlhdGVHZXQiLCJleHBpcnkiOjE3NjU4NDMyMDB9">
+    <meta http-equiv="origin-trial" content="AilL8KkHSwBr7+dMNQyC3NkL8tfE97hy+vvPPTOP+sDYOfPq4tOJbiK9n0CAA3wCrYHmVX6vK0KvP4NuddSveAoAAABpeyJvcmlnaW4iOiJodHRwczovL2RlZXBoYW5kLmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiV2ViQXV0aGVudGljYXRpb25JbW1lZGlhdGVHZXQiLCJleHBpcnkiOjE3NzQzMTA0MDB9">
     <title>WebAuthn Immediate Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
@@ -68,9 +68,9 @@
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mb-8">
         <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">WebAuthn Immediate Demo</h1>
 
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md" role="alert">
-            <p class="font-bold">Now in Origin Trial!</p>
-            <p class="text-sm">This feature is now available for testing in a Chrome Origin Trial.
+        <div id="originTrialMessage" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-md" role="alert">
+            <p id="originTrialTitle" class="font-bold">Now in Origin Trial!</p>
+            <p id="originTrialBody" class="text-sm">This feature is now available for testing in a Chrome Origin Trial.
                 <a href="https://developer.chrome.com/origintrials/#/view_trial/1128714656609730561" target="_blank" rel="noopener noreferrer" class="font-semibold text-green-800 hover:text-green-900 underline">
                     Learn more and register your origin
                 </a>.
@@ -79,7 +79,7 @@
 
         <div class="text-center mb-4">
             <a href="https://github.com/w3c/webauthn/wiki/Explainer:-WebAuthn-immediate-mediation" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline">
-                Explainer: WebAuthn immediate mediation
+                Explainer: WebAuthn immediate get
             </a>
         </div>
 
@@ -88,7 +88,7 @@
             <h2 class="font-semibold mb-2">How to Test:</h2>
             <ul class="list-disc list-inside space-y-1">
                 <li>Try this in a recent version of <strong class="font-semibold">Google Chrome</strong>.</li>
-                <li>This site is registered for the Origin Trial, so the feature should be enabled.</li>
+                <li id="originTrialInstruction">This site is registered for the Origin Trial, so the feature should be enabled.</li>
                 <li>Alternatively, you can enable the flag manually: <code class="bg-blue-100 px-1 rounded">chrome://flags/#web-authentication-immediate-get</code></li>
             </ul>
         </div>
@@ -106,7 +106,7 @@
 
         <div class="space-y-4 mb-6">
             <div class="flex items-center justify-between">
-                <span class="text-gray-700">Use <code class="bg-gray-200 px-1 rounded text-sm">mediation: 'immediate'</code></span>
+                <span class="text-gray-700">Use <code id="immediateModeLabel" class="bg-gray-200 px-1 rounded text-sm">mediation/uiMode: 'immediate'</code></span>
                 <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
                     <input type="checkbox" name="immediateToggle" id="immediateToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
                     <label for="immediateToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
@@ -141,7 +141,7 @@
                     <span id="fedcmSupportIcon" class="ml-2 relative"></span>
                 </span>
                  <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                    <input type="checkbox" name="fedcmToggle" id="fedcmToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                    <input type="checkbox" name="fedcmToggle" id="fedcmToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
                     <label for="fedcmToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
                 </div>
             </div>
@@ -167,11 +167,11 @@
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?uv=required</code>
                     </li>
                     <li>
-                        <code class="bg-gray-200 px-1 rounded">immediate_onload=true</code>: Attempts a sign-in with <code class="bg-gray-200 px-1 rounded">mediation: 'immediate'</code> automatically when the page loads.
+                        <code class="bg-gray-200 px-1 rounded">immediate_onload=true</code>: Attempts a sign-in with <code class="bg-gray-200 px-1 rounded">mediation/uiMode: 'immediate'</code> automatically when the page loads.
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?immediate_onload=true</code>
                     </li>
                     <li>
-                        <code class="bg-gray-200 px-1 rounded">fallback=pw</code>: If a sign-in attempt on this page results in a <code class="bg-gray-200 px-1 rounded">NotAllowedError</code> (e.g., user cancellation, or immediate mediation fails), you will be redirected to the sign-in page with the password flow pre-selected (<code class="bg-gray-200 px-1 rounded">signin.html?type=pw</code>).
+                        <code class="bg-gray-200 px-1 rounded">fallback=pw</code>: If a sign-in attempt on this page results in a <code class="bg-gray-200 px-1 rounded">NotAllowedError</code> (e.g., user cancellation, or immediate request fails), you will be redirected to the sign-in page with the password flow pre-selected (<code class="bg-gray-200 px-1 rounded">signin.html?type=pw</code>).
                         <br/>Example: <code class="bg-gray-200 px-1 rounded">index.html?fallback=pw</code>
                     </li>
                      <li>

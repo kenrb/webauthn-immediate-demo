@@ -124,15 +124,24 @@ function storeInfoAndRedirect(url, username, method) {
     window.location.href = url;
 }
 
+/**
+ * Detects the Chrome version from the User Agent string.
+ * @returns {number | false} - The Chrome version number, or false if not Chrome.
+ */
+function getChromeVersion() {
+    const raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+    return raw ? parseInt(raw[2], 10) : false;
+}
+
 
 // --- Core Sign-In Logic ---
 
 /**
  * Attempts the navigator.credentials.get() call based on current settings.
- * @param {boolean} [useImmediateMediation=false] - Whether to force 'immediate' mediation for this specific call (e.g., for onload).
+ * @param {boolean} [useImmediateGet=false] - Whether to force 'immediate' uiMode (or mediation) for this specific call (e.g., for onload).
  */
-async function attemptSignIn(useImmediateMediation = false) {
-    console.log("[script.js] attemptSignIn called. useImmediateMediation:", useImmediateMediation);
+async function attemptSignIn(useImmediateGet = false) {
+    console.log("[script.js] attemptSignIn called. useImmediateGet:", useImmediateGet);
     // Clear session storage at the start of the attempt
     try {
         console.log("[script.js] Clearing sessionStorage before sign-in attempt...");
@@ -142,7 +151,7 @@ async function attemptSignIn(useImmediateMediation = false) {
     }
 
     // Don't reset button state if it's an auto-onload attempt
-    if (!useImmediateMediation) {
+    if (!useImmediateGet) {
         resetButtonState();
     }
     showMessage('Attempting sign in...');
@@ -169,13 +178,17 @@ async function attemptSignIn(useImmediateMediation = false) {
             getOptions.publicKey = publicKeyCredentialRequestOptions;
         }
 
-        // Determine mediation: force 'immediate' if specified, otherwise use toggle state
-        if (useImmediateMediation) {
-            getOptions.mediation = 'immediate';
-            console.log("[script.js] Forcing mediation: 'immediate' for this call.");
-        } else if (immediateToggle.checked) {
-            getOptions.mediation = 'immediate';
-            console.log("[script.js] Using mediation: 'immediate' from toggle.");
+        // Determine mediation/uiMode: force 'immediate' if specified, otherwise use toggle state
+        const useImmediate = useImmediateGet || immediateToggle.checked;
+        if (useImmediate) {
+            const chromeVer = getChromeVersion();
+            if (chromeVer !== false && chromeVer <= 144) {
+                 getOptions.mediation = 'immediate';
+                 console.log(`[script.js] Chrome ${chromeVer} detected. Using mediation: 'immediate'.`);
+            } else {
+                getOptions.uiMode = 'immediate';
+                console.log(`[script.js] ${chromeVer ? 'Chrome ' + chromeVer : 'Non-Chrome'} detected. Using uiMode: 'immediate'.`);
+            }
         } else {
              console.log("[script.js] Using default mediation (optional).");
         }
@@ -190,7 +203,7 @@ async function attemptSignIn(useImmediateMediation = false) {
         if (fedcmToggle && fedcmToggle.checked && !fedcmToggle.disabled) {
             getOptions.identity = {
                 providers: [{
-                    configURL: "https://fedcm-demo-idp.dev/fedcm.json",
+                    configURL: "https://fedcm-idp-demo.onrender.com/fedcm.json",
                     clientId: window.location.origin,
                     nonce: Math.random().toString(36).substring(2),
                 }]
@@ -250,7 +263,7 @@ async function attemptSignIn(useImmediateMediation = false) {
 
         } else {
              console.log("[script.js] navigator.credentials.get returned null.");
-             if (!useImmediateMediation) {
+             if (!useImmediateGet) {
                  showMessage("Sign in cancelled or no credential selected immediately.", false);
              } else {
                   showMessage("Auto sign-in: No credential selected immediately.", false);
@@ -321,6 +334,44 @@ function initializeDemo() {
         return;
     }
 
+    // ** NEW: Check Chrome Version for Origin Trial Message **
+    const originTrialMessage = document.getElementById('originTrialMessage');
+    const originTrialTitle = document.getElementById('originTrialTitle');
+    const originTrialBody = document.getElementById('originTrialBody');
+    const immediateModeLabel = document.getElementById('immediateModeLabel');
+    const originTrialInstruction = document.getElementById('originTrialInstruction');
+
+    const chromeVer = getChromeVersion();
+    console.log(`[script.js] Detected Chrome Version: ${chromeVer}`);
+
+    if (originTrialMessage && originTrialTitle && originTrialBody) {
+        if (chromeVer === false) {
+             // Not Chrome -> Hide the message
+             originTrialMessage.style.display = 'none';
+             if (originTrialInstruction) originTrialInstruction.style.display = 'none';
+        } else if (chromeVer <= 144) {
+             // Chrome <= 144 -> Show "Now in Origin Trial" (Default HTML is correct, just ensure visible)
+             originTrialMessage.style.display = 'block';
+             if (originTrialInstruction) originTrialInstruction.style.display = 'list-item';
+        } else {
+             // Chrome >= 145 -> Show "Origin Trial has ended"
+             originTrialMessage.style.display = 'block';
+             originTrialMessage.classList.remove('bg-green-100', 'border-green-500', 'text-green-700');
+             originTrialMessage.classList.add('bg-yellow-100', 'border-yellow-500', 'text-yellow-700'); // Change style to warning
+             originTrialTitle.textContent = "Origin Trial has ended";
+             originTrialBody.innerHTML = "The Origin Trial for this feature has concluded in Chrome 145+. Please check for standard availability or newer trials.";
+             if (originTrialInstruction) originTrialInstruction.style.display = 'none';
+        }
+    }
+
+    if (immediateModeLabel) {
+        if (chromeVer !== false && chromeVer <= 144) {
+            immediateModeLabel.textContent = "mediation: 'immediate'";
+        } else {
+            immediateModeLabel.textContent = "uiMode: 'immediate'";
+        }
+    }
+
 
     const validUVOptions = ['required', 'preferred', 'discouraged'];
 
@@ -366,7 +417,7 @@ function initializeDemo() {
             if (capabilities && capabilities.immediateGet === true) {
                 showCapabilityStatus("✅ Browser supports `immediateGet` capability!", 'success');
             } else {
-                showCapabilityStatus("ℹ️ Browser does not report `immediateGet` capability. The 'immediate' mediation might not work as expected.", 'info');
+                showCapabilityStatus("ℹ️ Browser does not report `immediateGet` capability. The 'immediate' request might not work as expected.", 'info');
             }
 
             if (triggerImmediateOnLoad) {
@@ -412,8 +463,9 @@ function initializeDemo() {
         if (typeof IdentityCredential !== 'undefined') {
             console.log("[script.js] IdentityCredential supported.");
             fedcmSupportIcon.innerHTML = ICON_INFO;
-            fedcmSupportIcon.title = "You can sign in to fedcm-demo-idp.dev to test federation.";
+            fedcmSupportIcon.title = "You can sign in to https://fedcm-idp-demo.onrender.com to test federation.";
             fedcmToggle.disabled = false;
+            fedcmToggle.checked = true;
         } else {
             console.warn("[script.js] IdentityCredential not supported.");
             fedcmSupportIcon.innerHTML = ICON_WARN;
