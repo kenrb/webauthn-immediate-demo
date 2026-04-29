@@ -49,6 +49,9 @@ export async function createPasskey(username) {
     }
 }
 
+let abortController;
+let abortSignal;
+
 // Helper function to authenticate with a passkey (including immediate mediation)
 export async function authenticateWithPasskey(mediation, password) {
     try {
@@ -57,8 +60,12 @@ export async function authenticateWithPasskey(mediation, password) {
 
         const allowCredentials = [];
 
+        abortController = new AbortController();
+        abortSignal = abortController.signal;
+
         const options = {
             uiMode: mediation ? 'immediate' : undefined,
+            signal: abortSignal,
             password: password,
             publicKey: {
                 challenge: challenge,
@@ -68,7 +75,18 @@ export async function authenticateWithPasskey(mediation, password) {
             }
         };
 
-        const credential = await navigator.credentials.get(options);
+        // Just for testing. Needs to be removed.
+        setTimeout(abortController.abort(), 5000);
+
+        try {
+            const credential = await navigator.credentials.get(options);
+        } catch (error) {
+            if (error.name == "AbortError") {
+               console.log("request aborted");
+            }
+            console.log("request error");
+            return;
+        }
 
         let username = "User"; // Default
         let credentialType = "Unknown";
