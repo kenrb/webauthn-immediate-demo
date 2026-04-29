@@ -135,6 +135,8 @@ function getChromeVersion() {
 
 
 // --- Core Sign-In Logic ---
+let abortController;
+let abortSignal;
 
 /**
  * Attempts the navigator.credentials.get() call based on current settings.
@@ -227,7 +229,22 @@ async function attemptSignIn(useImmediateGet = false) {
             return value;
         }));
 
-        const credential = await navigator.credentials.get(getOptions);
+        abortController = new AbortController();
+        abortSignal = abortController.signal;
+        getOptions.signal = abortSignal;
+
+        // Just for testing. Needs to be removed.
+        setTimeout(abortController.abort(), 5000);
+
+        try {
+            const credential = await navigator.credentials.get(getOptions);
+        } catch (error) {
+            if (error.name == "AbortError") {
+               console.log("request aborted");
+            }
+            console.log("request error");
+            return;
+        }
 
         if (credential) {
             console.log("[script.js] Credential received:", credential);
